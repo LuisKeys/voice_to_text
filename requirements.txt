@@ -4,3 +4,5 @@ setuptools-rust
 pyaudio
 sounddevice
 numpy
+scipy 
+webrtcvad
