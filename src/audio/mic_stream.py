@@ -5,7 +5,7 @@ import wave
 from typing import Generator
 
 class MicrophoneStream:
-    def __init__(self, rate: int = 16000, chunk_size: int = 1024, channels: int = 1):
+    def __init__(self, rate: int = 44100, chunk_size: int = 8192, channels: int = 2):
         self.rate = rate
         self.chunk_size = chunk_size
         self.channels = channels
@@ -22,7 +22,9 @@ class MicrophoneStream:
         info = self.p.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
         for i in range(0, numdevices):
-            print("Input Device id ", i, " - ", self.p.get_device_info_by_host_api_device_index(0, i).get('name'))        
+            info = self.p.get_device_info_by_index(i)
+            print(info)
+        print(self.p.is_format_supported(self.rate, input_device=1, input_channels=self.channels, input_format=pyaudio.paFloat32))
         self.stream = self.p.open(
             format=pyaudio.paFloat32,
             channels=self.channels,
