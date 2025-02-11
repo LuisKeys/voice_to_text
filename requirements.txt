@@ -1,3 +1,6 @@
+torch
+openai-whisper
+setuptools-rust 
+pyaudio
 sounddevice
 numpy
-vosk
