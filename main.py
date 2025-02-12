@@ -21,16 +21,23 @@ def main():
     for audio_chunk in mic_stream.generator():
         # Store the audio chunk
         frames.append(audio_chunk.tobytes())
+        # Clean frames to avoid memory overflow
         
         # Check for silence
         max_amplitude = np.max(np.abs(audio_chunk))
-        if max_amplitude < silence_threshold:
-            silence_count += 1
-        else:
+        if max_amplitude > 0.1 and not mic_stream.capture:
+            print(f"Start capture")
+            mic_stream.capture = True
             silence_count = 0
+            frames = frames[-(len(frames) - 4):]
+
+        if max_amplitude < silence_threshold and mic_stream.capture:
+            silence_count += 1            
         
         # If we detect enough silence, process the recorded audio
         if silence_count >= max_silence_count and len(frames) > max_silence_count:
+            mic_stream.capture = False
+            print(f"Stop capture")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             temp_audio_file = os.path.join(temp_dir, f"audio_{timestamp}.wav")
             

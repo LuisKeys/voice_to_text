@@ -11,6 +11,7 @@ class MicrophoneStream:
         self.channels = 1
         self.p = None
         self.stream = None
+        self.capture = False
         
         # Initialize Whisper model (using the smallest model for speed)
         print("Loading Whisper model...")
@@ -55,7 +56,7 @@ class MicrophoneStream:
             
     def transcribe_audio(self, audio_file: str) -> str:
         """Transcribe audio file using Whisper."""
-        result = self.model.transcribe(audio_file)
+        result = self.model.transcribe(audio_file, language="en")
         return result["text"].strip()
 
     def find_device_index_by_name(self, name: str) -> int:        
