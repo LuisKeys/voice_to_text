@@ -13,9 +13,6 @@ def main():
     silence_threshold = 0.01  # Adjust this value based on your needs
     silence_count = 0
     max_silence_count = 2  # About 1 second of silence (adjust as needed)
-    
-    # Create a temporary directory for audio files
-    temp_dir = "./audio_data"
             
     # Process the audio stream
     for audio_chunk in mic_stream.generator():
@@ -30,6 +27,7 @@ def main():
             mic_stream.capture = True
             silence_count = 0
             frames = frames[-(len(frames) - 4):]
+            print(f"Frames: {len(frames)}")
 
         if max_amplitude < silence_threshold and mic_stream.capture:
             silence_count += 1            
@@ -38,15 +36,10 @@ def main():
         if silence_count >= max_silence_count and len(frames) > max_silence_count:
             mic_stream.capture = False
             print(f"Stop capture")
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            temp_audio_file = os.path.join(temp_dir, f"audio_{timestamp}.wav")
-            
-            # Save the audio chunk
-            mic_stream.save_audio(frames, temp_audio_file)
             
             # Transcribe the audio
             print("\nTranscribing...")
-            transcription = mic_stream.transcribe_audio(temp_audio_file)
+            transcription = mic_stream.transcribe_from_buffer(frames)
             print(f"Transcription: {transcription}")
             
             # Clear frames for next recording

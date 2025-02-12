@@ -1,8 +1,10 @@
-import pyaudio
-import numpy as np
-import whisper
-import wave
 from typing import Generator
+import io
+import numpy as np
+import pyaudio
+import soundfile as sf
+import wave
+import whisper
 
 class MicrophoneStream:
     def __init__(self):
@@ -12,6 +14,7 @@ class MicrophoneStream:
         self.p = None
         self.stream = None
         self.capture = False
+        self.language="en"
         
         # Initialize Whisper model (using the smallest model for speed)
         print("Loading Whisper model...")
@@ -54,11 +57,6 @@ class MicrophoneStream:
             int16_audio_data = (self.audio_data * 32767).astype(np.int16)
             wf.writeframes(int16_audio_data)
             
-    def transcribe_audio(self, audio_file: str) -> str:
-        """Transcribe audio file using Whisper."""
-        result = self.model.transcribe(audio_file, language="en")
-        return result["text"].strip()
-
     def find_device_index_by_name(self, name: str) -> int:        
         info = self.p.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
@@ -73,3 +71,17 @@ class MicrophoneStream:
             print(f"No device with name containing '{name}' found")
             raise ValueError(f"No device with name containing '{name}' found")
             return None
+
+    def transcribe_from_file(self, audio_file: str) -> str:
+        """Transcribe audio file using Whisper."""
+        result = self.model.transcribe(audio_file, language="en")
+        return result["text"].strip()
+    
+    def transcribe_from_buffer(self, frames):
+        self.audio_data = np.frombuffer(b''.join(frames), dtype=np.float32)
+        self.audio_data = whisper.pad_or_trim(self.audio_data)
+        mel = whisper.log_mel_spectrogram(self.audio_data).to(self.model.device)
+        options = whisper.DecodingOptions(language=self.language)
+        result = whisper.decode(self.model, mel, options)
+
+        return result.text
